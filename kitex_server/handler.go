@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	management "github.com/cloudwego/hertz/hertz_server/kitex_client/kitex_gen/user/management"
+	management "github.com/Chelseacax/orbital-X-Bytedance/hertz_server/kitex_gen/user/management"
 )
 
 // UserManagementImpl implements the last service interface defined in the IDL.

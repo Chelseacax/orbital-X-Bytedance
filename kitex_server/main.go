@@ -1,7 +1,7 @@
 package main
 
 import (
-	management "github.com/cloudwego/hertz/hertz_server/kitex_client/kitex_gen/user/management/usermanagement"
+	management "orbital-X-Bytedance/kitex_server/kitex_gen/user/management/usermanagement"
 	"log"
 )
 

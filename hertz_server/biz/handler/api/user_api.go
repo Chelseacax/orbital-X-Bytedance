@@ -4,7 +4,12 @@ package api
 
 import (
 	"context"
+	"fmt"
+	"github.com/Chelseacax/orbital-X-Bytedance/hertz_server/kitex_gen/user/management"
+	"github.com/Chelseacax/orbital-X-Bytedance/hertz_server/kitex_gen/user/management/usermanagement"
 
+
+	client2 "github.com/cloudwego/kitex/client"
 	api "github.com/cloudwego/hertz/hertz_server/biz/model/api"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
@@ -21,10 +26,40 @@ func QueryUser(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := new(api.QueryUserResponse)
+// Use kitex client to make rpc calls and request back-end services
+	client, err := usermanagement.NewClient("User", client2.WithHostPorts("127.0.0.1:8888"))
+	if err != nil {
+		panic(err)
+	}
 
-	c.JSON(consts.StatusOK, resp)
+	reqRpc := &management.QueryUserRequest{
+		Num: fmt.Sprintf("%d", req.Num),
+	}
+
+	respRpc, err := client.QueryUser(ctx, reqRpc)
+	if err != nil {
+		panic(err)
+	}
+
+	// todo: Finish the rpc call and go do some other business logic
+
+	if !respRpc.Exist {
+		resp := &api.QueryUserResponse{
+			Msg: fmt.Sprintf("don't have the num: %d", req.Num),
+		}
+		c.JSON(200, resp)
+		return
+	}
+
+	resp := &api.QueryUserResponse{
+		Num:    respRpc.Num,
+		Name:   respRpc.Name,
+		Gender: respRpc.Gender,
+	}
+
+	c.JSON(200, resp)
 }
+
 
 // AddUser .
 // @router User/Add [POST]

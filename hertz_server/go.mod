@@ -1,4 +1,4 @@
-module github.com/cloudwego/hertz/hertz_server
+module orbital-X-Bytedance/hertz_server
 
 go 1.20
 
