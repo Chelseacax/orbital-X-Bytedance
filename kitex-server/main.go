@@ -9,6 +9,9 @@ import (
 
 	"github.com/cloudwego/kitex/pkg/generic"
 	"github.com/cloudwego/kitex/server/genericserver"
+	"github.com/cloudwego/kitex/pkg/rpcinfo"
+    "github.com/cloudwego/kitex/server"
+    etcd "github.com/kitex-contrib/registry-etcd"
 )
 
 func main() {
@@ -32,11 +35,21 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	svr := genericserver.NewServer(new(GenericServiceImpl), g)
+
+	r, err := etcd.NewEtcdRegistry([]string{"127.0.0.1:2379"}) // r should not be reused.
+    if err != nil {
+        panic(err)
+    }
+
+	svr := genericserver.NewServer(new(GenericServiceImpl), g,server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: "example"}), server.WithRegistry(r))
 	if err != nil {
 		panic(err)
 	}
 
+
+
+
+	
 	// svr := server0.NewServer(new(ExampleServiceImpl))
 
 	err = svr.Run()
