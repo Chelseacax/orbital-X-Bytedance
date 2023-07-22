@@ -16,6 +16,12 @@ import (
 	// Required for LoadBalancing
 	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/cloudwego/kitex/server"
+
+	// Required for service registry and discovery
+	"github.com/cloudwego/kitex/pkg/rpcinfo"
+    etcd "github.com/kitex-contrib/registry-etcd"
+
+
 )
 
 func main() {
@@ -29,17 +35,23 @@ func main() {
 		panic(err)
 	}
 
+	//service registry and discovery
+	r, err := etcd.NewEtcdRegistry([]string{"127.0.0.1:2379"}) // r should not be reused.
+    if err != nil {
+        panic(err)
+    }
+
 	// LoadBalancing (with 2 Kitex servers)
 
 	// Server0
 	// Listening on IP address 0.0.0.0 & port number 8888
 	addr0, _ := net.ResolveTCPAddr("tcp", "0.0.0.0:8888")
-	server0 := genericserver.NewServer(new(GenericServiceImpl0), g, server.WithServiceAddr(addr0))
+	server0 := genericserver.NewServer(new(GenericServiceImpl0), g,server.WithServiceAddr(addr0), server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: "example"}), server.WithRegistry(r))
 
 	// Server1
 	// Listening on IP address 0.0.0.0 & port number 8888\9
 	addr1, _ := net.ResolveTCPAddr("tcp", "0.0.0.0:8889")
-	server1 := genericserver.NewServer(new(GenericServiceImpl1), g, server.WithServiceAddr(addr1))
+	server1 := genericserver.NewServer(new(GenericServiceImpl1), g,server.WithServiceAddr(addr1), server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: "example"}), server.WithRegistry(r))
 
 	var wg sync.WaitGroup
 	wg.Add(2)

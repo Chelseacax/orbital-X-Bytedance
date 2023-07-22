@@ -21,6 +21,11 @@ import (
 
 	// required for load-balancing
 	"github.com/cloudwego/kitex/pkg/loadbalance"
+
+	// required for service registry and discovery
+    etcd "github.com/kitex-contrib/registry-etcd"
+
+
 )
 
 // Load Balancing options
@@ -55,10 +60,16 @@ func HelloMethod(ctx context.Context, c *app.RequestContext) {
 		klog.Fatalf("new map thrift generic failed: %v", err)
 	}
 
+	// service registry and discovery
+	r, err := etcd.NewEtcdResolver([]string{"127.0.0.1:2379"})
+    if err != nil {
+        klog.Fatalf("Service registry failed: %v", err)
+	}
+	
 	// "example" is the service name
 	cli, err := genericclient.NewClient("example", g,
 		client.WithHostPorts(server0, server1),
-		client.WithLoadBalancer(lb))
+		client.WithLoadBalancer(lb),client.WithResolver(r))
 	if err != nil {
 		klog.Fatalf("new http generic client failed: %v", err)
 	}
@@ -85,6 +96,7 @@ func HelloMethod(ctx context.Context, c *app.RequestContext) {
 	// Printing on Hertz client
 	reply := utils.H{response.Response: req.Name}
 	c.JSON(consts.StatusOK, reply)
+	
 }
 
 // Add .
@@ -112,10 +124,16 @@ func Add(ctx context.Context, c *app.RequestContext) {
 		klog.Fatalf("new map thrift generic failed: %v", err)
 	}
 
+		// service registry and discovery
+	r, err := etcd.NewEtcdResolver([]string{"127.0.0.1:2379"})
+    if err != nil {
+        klog.Fatalf("Service registry failed: %v", err)
+	}
+
 	// "example" is the service name
 	cli, err := genericclient.NewClient("example", g,
 		client.WithHostPorts(server0, server1),
-		client.WithLoadBalancer(lb))
+		client.WithLoadBalancer(lb),client.WithResolver(r))
 	if err != nil {
 		klog.Fatalf("new http generic client failed: %v", err)
 	}
