@@ -19,7 +19,7 @@ Conversion notes:
 * Source doc: readme
 ----->
 
-
+## check out the details of our full documentation here:https://docs.google.com/document/d/1_plI0Uo0BMp_dmGk1guOZPVVn63LVT6k3Y7NAu9aBss/edit#heading=h.s0ri7fwxlsfu
 
 ## 1. Basic structure
 
