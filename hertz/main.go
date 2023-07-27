@@ -7,9 +7,9 @@ import (
 )
 
 func main() {
-	// Hertz server will be listening on IP address 0.0.0.0
-	// and the port number is 1111
-	h := server.Default(server.WithHostPorts("0.0.0.0:1111"))
+	// Hertz server will be listening on IP address 127.0.0.1
+	// and the port number is 42000
+	h := server.Default(server.WithHostPorts("127.0.0.1:42000"))
 
 	register(h)
 	h.Spin()

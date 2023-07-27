@@ -2,21 +2,24 @@ package main
 
 import (
 	"context"
-	example "orbital/kitex/kitex_gen/example"
+	orbital "test4/kitex/kitex_gen/orbital"
 )
 
-// ExampleServiceImpl implements the last service interface defined in the IDL.
-type ExampleServiceImpl struct{}
+// CalculatorServiceImpl implements the last service interface defined in the IDL.
+type CalculatorServiceImpl struct{}
 
-// HelloMethod implements the ExampleServiceImpl interface.
-func (s *ExampleServiceImpl) HelloMethod(ctx context.Context, request *example.HelloReq) (resp *example.HelloResp, err error) {
-	// TODO: Your code here...
-	return &example.HelloResp{RespBody: "Hello! :) Have a nice day"}, nil
-}
-
-// Add implements the ExampleServiceImpl interface.
-func (s *ExampleServiceImpl) Add(ctx context.Context, inputs *example.Variable) (resp *example.Summer, err error) {
+// Add implements the CalculatorServiceImpl interface.
+func (s *CalculatorServiceImpl) Add(ctx context.Context, inputs *orbital.Variable) (resp *orbital.Result_, err error) {
 	// TODO: Your code here...
 	summation := inputs.FirstInt + inputs.SecondInt
-	return &example.Summer{Sum: summation}, nil
+	return &orbital.Result_{Output: summation}, nil
+}
+
+// HelloServiceImpl implements the last service interface defined in the IDL.
+type HelloServiceImpl struct{}
+
+// HelloMethod implements the HelloServiceImpl interface.
+func (s *HelloServiceImpl) HelloMethod(ctx context.Context, request *orbital.HelloRequest) (resp *orbital.HelloResponse, err error) {
+	// TODO: Your code here...
+	return &orbital.HelloResponse{ResponseBody: "Hello! :) Have a nice day"}, nil
 }
