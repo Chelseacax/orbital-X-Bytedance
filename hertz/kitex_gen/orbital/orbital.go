@@ -232,30 +232,30 @@ func (p *Variable) Field2DeepEqual(src int64) bool {
 	return true
 }
 
-type Result_ struct {
+type Answer struct {
 	Output int64 `thrift:"Output,1" frugal:"1,default,i64" json:"Output"`
 }
 
-func NewResult_() *Result_ {
-	return &Result_{}
+func NewAnswer() *Answer {
+	return &Answer{}
 }
 
-func (p *Result_) InitDefault() {
-	*p = Result_{}
+func (p *Answer) InitDefault() {
+	*p = Answer{}
 }
 
-func (p *Result_) GetOutput() (v int64) {
+func (p *Answer) GetOutput() (v int64) {
 	return p.Output
 }
-func (p *Result_) SetOutput(val int64) {
+func (p *Answer) SetOutput(val int64) {
 	p.Output = val
 }
 
-var fieldIDToName_Result_ = map[int16]string{
+var fieldIDToName_Answer = map[int16]string{
 	1: "Output",
 }
 
-func (p *Result_) Read(iprot thrift.TProtocol) (err error) {
+func (p *Answer) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -304,7 +304,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_Result_[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_Answer[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -314,7 +314,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *Result_) ReadField1(iprot thrift.TProtocol) error {
+func (p *Answer) ReadField1(iprot thrift.TProtocol) error {
 	if v, err := iprot.ReadI64(); err != nil {
 		return err
 	} else {
@@ -323,9 +323,9 @@ func (p *Result_) ReadField1(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *Result_) Write(oprot thrift.TProtocol) (err error) {
+func (p *Answer) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("Result"); err != nil {
+	if err = oprot.WriteStructBegin("Answer"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -352,7 +352,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *Result_) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *Answer) writeField1(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("Output", thrift.I64, 1); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -369,14 +369,14 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *Result_) String() string {
+func (p *Answer) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("Result_(%+v)", *p)
+	return fmt.Sprintf("Answer(%+v)", *p)
 }
 
-func (p *Result_) DeepEqual(ano *Result_) bool {
+func (p *Answer) DeepEqual(ano *Answer) bool {
 	if p == ano {
 		return true
 	} else if p == nil || ano == nil {
@@ -388,7 +388,7 @@ func (p *Result_) DeepEqual(ano *Result_) bool {
 	return true
 }
 
-func (p *Result_) Field1DeepEqual(src int64) bool {
+func (p *Answer) Field1DeepEqual(src int64) bool {
 
 	if p.Output != src {
 		return false
@@ -725,7 +725,9 @@ func (p *HelloResponse) Field1DeepEqual(src string) bool {
 }
 
 type CalculatorService interface {
-	Add(ctx context.Context, inputs *Variable) (r *Result_, err error)
+	Add(ctx context.Context, inputs *Variable) (r *Answer, err error)
+
+	Subtract(ctx context.Context, inputs *Variable) (r *Answer, err error)
 }
 
 type CalculatorServiceClient struct {
@@ -754,11 +756,20 @@ func (p *CalculatorServiceClient) Client_() thrift.TClient {
 	return p.c
 }
 
-func (p *CalculatorServiceClient) Add(ctx context.Context, inputs *Variable) (r *Result_, err error) {
+func (p *CalculatorServiceClient) Add(ctx context.Context, inputs *Variable) (r *Answer, err error) {
 	var _args CalculatorServiceAddArgs
 	_args.Inputs = inputs
 	var _result CalculatorServiceAddResult
 	if err = p.Client_().Call(ctx, "Add", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+func (p *CalculatorServiceClient) Subtract(ctx context.Context, inputs *Variable) (r *Answer, err error) {
+	var _args CalculatorServiceSubtractArgs
+	_args.Inputs = inputs
+	var _result CalculatorServiceSubtractResult
+	if err = p.Client_().Call(ctx, "Subtract", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
@@ -825,6 +836,7 @@ func (p *CalculatorServiceProcessor) ProcessorMap() map[string]thrift.TProcessor
 func NewCalculatorServiceProcessor(handler CalculatorService) *CalculatorServiceProcessor {
 	self := &CalculatorServiceProcessor{handler: handler, processorMap: make(map[string]thrift.TProcessorFunction)}
 	self.AddToProcessorMap("Add", &calculatorServiceProcessorAdd{handler: handler})
+	self.AddToProcessorMap("Subtract", &calculatorServiceProcessorSubtract{handler: handler})
 	return self
 }
 func (p *CalculatorServiceProcessor) Process(ctx context.Context, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
@@ -864,7 +876,7 @@ func (p *calculatorServiceProcessorAdd) Process(ctx context.Context, seqId int32
 	iprot.ReadMessageEnd()
 	var err2 error
 	result := CalculatorServiceAddResult{}
-	var retval *Result_
+	var retval *Answer
 	if retval, err2 = p.handler.Add(ctx, args.Inputs); err2 != nil {
 		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing Add: "+err2.Error())
 		oprot.WriteMessageBegin("Add", thrift.EXCEPTION, seqId)
@@ -876,6 +888,54 @@ func (p *calculatorServiceProcessorAdd) Process(ctx context.Context, seqId int32
 		result.Success = retval
 	}
 	if err2 = oprot.WriteMessageBegin("Add", thrift.REPLY, seqId); err2 != nil {
+		err = err2
+	}
+	if err2 = result.Write(oprot); err == nil && err2 != nil {
+		err = err2
+	}
+	if err2 = oprot.WriteMessageEnd(); err == nil && err2 != nil {
+		err = err2
+	}
+	if err2 = oprot.Flush(ctx); err == nil && err2 != nil {
+		err = err2
+	}
+	if err != nil {
+		return
+	}
+	return true, err
+}
+
+type calculatorServiceProcessorSubtract struct {
+	handler CalculatorService
+}
+
+func (p *calculatorServiceProcessorSubtract) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := CalculatorServiceSubtractArgs{}
+	if err = args.Read(iprot); err != nil {
+		iprot.ReadMessageEnd()
+		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
+		oprot.WriteMessageBegin("Subtract", thrift.EXCEPTION, seqId)
+		x.Write(oprot)
+		oprot.WriteMessageEnd()
+		oprot.Flush(ctx)
+		return false, err
+	}
+
+	iprot.ReadMessageEnd()
+	var err2 error
+	result := CalculatorServiceSubtractResult{}
+	var retval *Answer
+	if retval, err2 = p.handler.Subtract(ctx, args.Inputs); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing Subtract: "+err2.Error())
+		oprot.WriteMessageBegin("Subtract", thrift.EXCEPTION, seqId)
+		x.Write(oprot)
+		oprot.WriteMessageEnd()
+		oprot.Flush(ctx)
+		return true, err2
+	} else {
+		result.Success = retval
+	}
+	if err2 = oprot.WriteMessageBegin("Subtract", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -1066,7 +1126,7 @@ func (p *CalculatorServiceAddArgs) Field1DeepEqual(src *Variable) bool {
 }
 
 type CalculatorServiceAddResult struct {
-	Success *Result_ `thrift:"success,0,optional" frugal:"0,optional,Result_" json:"success,omitempty"`
+	Success *Answer `thrift:"success,0,optional" frugal:"0,optional,Answer" json:"success,omitempty"`
 }
 
 func NewCalculatorServiceAddResult() *CalculatorServiceAddResult {
@@ -1077,16 +1137,16 @@ func (p *CalculatorServiceAddResult) InitDefault() {
 	*p = CalculatorServiceAddResult{}
 }
 
-var CalculatorServiceAddResult_Success_DEFAULT *Result_
+var CalculatorServiceAddResult_Success_DEFAULT *Answer
 
-func (p *CalculatorServiceAddResult) GetSuccess() (v *Result_) {
+func (p *CalculatorServiceAddResult) GetSuccess() (v *Answer) {
 	if !p.IsSetSuccess() {
 		return CalculatorServiceAddResult_Success_DEFAULT
 	}
 	return p.Success
 }
 func (p *CalculatorServiceAddResult) SetSuccess(x interface{}) {
-	p.Success = x.(*Result_)
+	p.Success = x.(*Answer)
 }
 
 var fieldIDToName_CalculatorServiceAddResult = map[int16]string{
@@ -1157,7 +1217,7 @@ ReadStructEndError:
 }
 
 func (p *CalculatorServiceAddResult) ReadField0(iprot thrift.TProtocol) error {
-	p.Success = NewResult_()
+	p.Success = NewAnswer()
 	if err := p.Success.Read(iprot); err != nil {
 		return err
 	}
@@ -1231,7 +1291,353 @@ func (p *CalculatorServiceAddResult) DeepEqual(ano *CalculatorServiceAddResult) 
 	return true
 }
 
-func (p *CalculatorServiceAddResult) Field0DeepEqual(src *Result_) bool {
+func (p *CalculatorServiceAddResult) Field0DeepEqual(src *Answer) bool {
+
+	if !p.Success.DeepEqual(src) {
+		return false
+	}
+	return true
+}
+
+type CalculatorServiceSubtractArgs struct {
+	Inputs *Variable `thrift:"Inputs,1" frugal:"1,default,Variable" json:"Inputs"`
+}
+
+func NewCalculatorServiceSubtractArgs() *CalculatorServiceSubtractArgs {
+	return &CalculatorServiceSubtractArgs{}
+}
+
+func (p *CalculatorServiceSubtractArgs) InitDefault() {
+	*p = CalculatorServiceSubtractArgs{}
+}
+
+var CalculatorServiceSubtractArgs_Inputs_DEFAULT *Variable
+
+func (p *CalculatorServiceSubtractArgs) GetInputs() (v *Variable) {
+	if !p.IsSetInputs() {
+		return CalculatorServiceSubtractArgs_Inputs_DEFAULT
+	}
+	return p.Inputs
+}
+func (p *CalculatorServiceSubtractArgs) SetInputs(val *Variable) {
+	p.Inputs = val
+}
+
+var fieldIDToName_CalculatorServiceSubtractArgs = map[int16]string{
+	1: "Inputs",
+}
+
+func (p *CalculatorServiceSubtractArgs) IsSetInputs() bool {
+	return p.Inputs != nil
+}
+
+func (p *CalculatorServiceSubtractArgs) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRUCT {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_CalculatorServiceSubtractArgs[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *CalculatorServiceSubtractArgs) ReadField1(iprot thrift.TProtocol) error {
+	p.Inputs = NewVariable()
+	if err := p.Inputs.Read(iprot); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *CalculatorServiceSubtractArgs) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("Subtract_args"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *CalculatorServiceSubtractArgs) writeField1(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("Inputs", thrift.STRUCT, 1); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := p.Inputs.Write(oprot); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *CalculatorServiceSubtractArgs) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("CalculatorServiceSubtractArgs(%+v)", *p)
+}
+
+func (p *CalculatorServiceSubtractArgs) DeepEqual(ano *CalculatorServiceSubtractArgs) bool {
+	if p == ano {
+		return true
+	} else if p == nil || ano == nil {
+		return false
+	}
+	if !p.Field1DeepEqual(ano.Inputs) {
+		return false
+	}
+	return true
+}
+
+func (p *CalculatorServiceSubtractArgs) Field1DeepEqual(src *Variable) bool {
+
+	if !p.Inputs.DeepEqual(src) {
+		return false
+	}
+	return true
+}
+
+type CalculatorServiceSubtractResult struct {
+	Success *Answer `thrift:"success,0,optional" frugal:"0,optional,Answer" json:"success,omitempty"`
+}
+
+func NewCalculatorServiceSubtractResult() *CalculatorServiceSubtractResult {
+	return &CalculatorServiceSubtractResult{}
+}
+
+func (p *CalculatorServiceSubtractResult) InitDefault() {
+	*p = CalculatorServiceSubtractResult{}
+}
+
+var CalculatorServiceSubtractResult_Success_DEFAULT *Answer
+
+func (p *CalculatorServiceSubtractResult) GetSuccess() (v *Answer) {
+	if !p.IsSetSuccess() {
+		return CalculatorServiceSubtractResult_Success_DEFAULT
+	}
+	return p.Success
+}
+func (p *CalculatorServiceSubtractResult) SetSuccess(x interface{}) {
+	p.Success = x.(*Answer)
+}
+
+var fieldIDToName_CalculatorServiceSubtractResult = map[int16]string{
+	0: "success",
+}
+
+func (p *CalculatorServiceSubtractResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *CalculatorServiceSubtractResult) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 0:
+			if fieldTypeId == thrift.STRUCT {
+				if err = p.ReadField0(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_CalculatorServiceSubtractResult[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *CalculatorServiceSubtractResult) ReadField0(iprot thrift.TProtocol) error {
+	p.Success = NewAnswer()
+	if err := p.Success.Read(iprot); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *CalculatorServiceSubtractResult) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("Subtract_result"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField0(oprot); err != nil {
+			fieldId = 0
+			goto WriteFieldError
+		}
+
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *CalculatorServiceSubtractResult) writeField0(oprot thrift.TProtocol) (err error) {
+	if p.IsSetSuccess() {
+		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := p.Success.Write(oprot); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 0 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
+}
+
+func (p *CalculatorServiceSubtractResult) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("CalculatorServiceSubtractResult(%+v)", *p)
+}
+
+func (p *CalculatorServiceSubtractResult) DeepEqual(ano *CalculatorServiceSubtractResult) bool {
+	if p == ano {
+		return true
+	} else if p == nil || ano == nil {
+		return false
+	}
+	if !p.Field0DeepEqual(ano.Success) {
+		return false
+	}
+	return true
+}
+
+func (p *CalculatorServiceSubtractResult) Field0DeepEqual(src *Answer) bool {
 
 	if !p.Success.DeepEqual(src) {
 		return false

@@ -7,18 +7,28 @@ import (
 	"encoding/json"
 	"fmt"
 
-	orbital "test4/hertz/biz/model/orbital"
+	orbital "test1/hertz/biz/model/orbital"
 
+	// For Hertz's framework
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
+
+	// For Kitex's client framework
 	"github.com/cloudwego/kitex/client"
+
+	// For Kitex's generic call feature
 	"github.com/cloudwego/kitex/client/genericclient"
 	"github.com/cloudwego/kitex/pkg/generic"
+	"github.com/cloudwego/kitex/pkg/generic/thrift"
 	"github.com/cloudwego/kitex/pkg/klog"
+
+	// For service discovery & registry
+	etcd "github.com/kitex-contrib/registry-etcd"
 )
 
-// Load Balancing Options
+// Load balancing options --> declared in the other service file (i.e. calculator_service.go)
+// Servers & their IP addresses that the microservers will be running on
 var helloServer0 = "127.0.0.1:43000"
 var helloServer1 = "127.0.0.1:43001"
 
@@ -36,11 +46,19 @@ func HelloMethod(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	klog.Info("Passing through Hertz to Kitex")
+	klog.Info("HERTZ: Passing to Kitex")
 
-	// Kitex's Generic Call Feature
-	// path is the location of the thrift file governing this method
+	// Kitex's generic call feature
+
+	// path is the pathway to the IDL file
 	path := "../idl/orbital.thrift"
+
+	// This function call will change the default IDL parsing
+	// from only last service to all services in the IDL file.
+	// By default (i.e. w/o this func call),
+	// the parser will only parse the last service declared in the IDL file.
+	thrift.SetDefaultParseMode(thrift.CombineServices)
+
 	p, err := generic.NewThriftFileProvider(path)
 	if err != nil {
 		klog.Fatalf("New thrift file provider failed: %v", err)
@@ -51,10 +69,20 @@ func HelloMethod(ctx context.Context, c *app.RequestContext) {
 		klog.Fatalf("New map thrift generic failed: %v", err)
 	}
 
+	// Service discovery
+
+	// This HTTP server (in Hertz) will run into an error
+	// if the calculator microservice servers (in Kitex) are not up.
+	r, err := etcd.NewEtcdResolver([]string{"127.0.0.1:2379"})
+	if err != nil {
+		klog.Fatalf("Service registry failed: %v", err)
+	}
+
 	// "hello" is the service name
 	cli, err := genericclient.NewClient("hello", g,
 		client.WithHostPorts(helloServer0, helloServer1),
-		client.WithLoadBalancer(lb))
+		client.WithLoadBalancer(lb),
+		client.WithResolver(r))
 	if err != nil {
 		klog.Fatalf("New HTTP generic client failed: %v", err)
 	}
@@ -76,11 +104,11 @@ func HelloMethod(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	// Printing on Hertz client
+	// Printing on response on terminal
 	reply := utils.H{response.Response: req.Name}
 	c.JSON(consts.StatusOK, reply)
 
-	klog.Info("Hertz: Request completed")
+	klog.Info("HERTZ: Request completed")
 }
 
 type Response struct {

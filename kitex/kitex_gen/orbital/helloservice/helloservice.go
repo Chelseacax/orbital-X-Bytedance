@@ -6,7 +6,7 @@ import (
 	"context"
 	client "github.com/cloudwego/kitex/client"
 	kitex "github.com/cloudwego/kitex/pkg/serviceinfo"
-	orbital "test4/kitex/kitex_gen/orbital"
+	orbital "test1/kitex/kitex_gen/orbital"
 )
 
 func serviceInfo() *kitex.ServiceInfo {

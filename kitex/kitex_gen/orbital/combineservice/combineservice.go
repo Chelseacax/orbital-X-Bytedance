@@ -6,7 +6,7 @@ import (
 	"context"
 	client "github.com/cloudwego/kitex/client"
 	kitex "github.com/cloudwego/kitex/pkg/serviceinfo"
-	orbital "test4/kitex/kitex_gen/orbital"
+	orbital "test1/kitex/kitex_gen/orbital"
 )
 
 type CombineService interface {
@@ -25,6 +25,7 @@ func NewServiceInfo() *kitex.ServiceInfo {
 	handlerType := (*CombineService)(nil)
 	methods := map[string]kitex.MethodInfo{
 		"Add":         kitex.NewMethodInfo(addHandler, newCalculatorServiceAddArgs, newCalculatorServiceAddResult, false),
+		"Subtract":    kitex.NewMethodInfo(subtractHandler, newCalculatorServiceSubtractArgs, newCalculatorServiceSubtractResult, false),
 		"HelloMethod": kitex.NewMethodInfo(helloMethodHandler, newHelloServiceHelloMethodArgs, newHelloServiceHelloMethodResult, false),
 	}
 	extra := map[string]interface{}{
@@ -61,6 +62,24 @@ func newCalculatorServiceAddResult() interface{} {
 	return orbital.NewCalculatorServiceAddResult()
 }
 
+func subtractHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	realArg := arg.(*orbital.CalculatorServiceSubtractArgs)
+	realResult := result.(*orbital.CalculatorServiceSubtractResult)
+	success, err := handler.(orbital.CalculatorService).Subtract(ctx, realArg.Inputs)
+	if err != nil {
+		return err
+	}
+	realResult.Success = success
+	return nil
+}
+func newCalculatorServiceSubtractArgs() interface{} {
+	return orbital.NewCalculatorServiceSubtractArgs()
+}
+
+func newCalculatorServiceSubtractResult() interface{} {
+	return orbital.NewCalculatorServiceSubtractResult()
+}
+
 func helloMethodHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
 	realArg := arg.(*orbital.HelloServiceHelloMethodArgs)
 	realResult := result.(*orbital.HelloServiceHelloMethodResult)
@@ -89,11 +108,21 @@ func newServiceClient(c client.Client) *kClient {
 	}
 }
 
-func (p *kClient) Add(ctx context.Context, inputs *orbital.Variable) (r *orbital.Result_, err error) {
+func (p *kClient) Add(ctx context.Context, inputs *orbital.Variable) (r *orbital.Answer, err error) {
 	var _args orbital.CalculatorServiceAddArgs
 	_args.Inputs = inputs
 	var _result orbital.CalculatorServiceAddResult
 	if err = p.c.Call(ctx, "Add", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) Subtract(ctx context.Context, inputs *orbital.Variable) (r *orbital.Answer, err error) {
+	var _args orbital.CalculatorServiceSubtractArgs
+	_args.Inputs = inputs
+	var _result orbital.CalculatorServiceSubtractResult
+	if err = p.c.Call(ctx, "Subtract", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil

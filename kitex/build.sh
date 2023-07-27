@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-RUN_NAME="calculator"
+RUN_NAME="orbital"
 
 mkdir -p output/bin
 cp script/* output/

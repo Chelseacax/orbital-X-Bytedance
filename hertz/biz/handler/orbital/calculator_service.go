@@ -7,20 +7,33 @@ import (
 	"encoding/json"
 	"fmt"
 
-	orbital "test4/hertz/biz/model/orbital"
+	orbital "test1/hertz/biz/model/orbital"
 
+	// For Hertz's framework
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
+
+	// For Kitex's client framework
 	"github.com/cloudwego/kitex/client"
+
+	// For Kitex's generic call feature
 	"github.com/cloudwego/kitex/client/genericclient"
 	"github.com/cloudwego/kitex/pkg/generic"
+	"github.com/cloudwego/kitex/pkg/generic/thrift"
 	"github.com/cloudwego/kitex/pkg/klog"
+
+	// For load balancing
 	"github.com/cloudwego/kitex/pkg/loadbalance"
+
+	// For service discovery & registry
+	etcd "github.com/kitex-contrib/registry-etcd"
 )
 
-// Load Balancing Options
+// Load balancing options
 var lb = loadbalance.NewWeightedRandomBalancer()
+
+// Servers & their IP addresses that the microservers will be running on
 var calculatorServer0 = "127.0.0.1:44000"
 var calculatorServer1 = "127.0.0.1:44001"
 
@@ -38,10 +51,19 @@ func Add(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	klog.Info("Passing through Hertz to Kitex")
+	klog.Info("HERTZ: Passing to Kitex")
 
-	// kitex's generic call feature
+	// Kitex's generic call feature
+
+	// path is the pathway to the IDL file
 	path := "../idl/orbital.thrift"
+
+	// This function call will change the default IDL parsing
+	// from only last service to all services in the IDL file.
+	// By default (i.e. w/o this func call),
+	// the parser will only parse the last service declared in the IDL file.
+	thrift.SetDefaultParseMode(thrift.CombineServices)
+
 	p, err := generic.NewThriftFileProvider(path)
 	if err != nil {
 		klog.Fatalf("New thrift file provider failed: %v", err)
@@ -52,22 +74,35 @@ func Add(ctx context.Context, c *app.RequestContext) {
 		klog.Fatalf("New map thrift generic failed: %v", err)
 	}
 
+	// Service discovery
+
+	// This HTTP server (in Hertz) will run into an error
+	// if the calculator microservice servers (in Kitex) are not up.
+	r, err := etcd.NewEtcdResolver([]string{"127.0.0.1:2379"})
+	if err != nil {
+		klog.Fatalf("Service registry failed: %v", err)
+	}
+
 	// "calculator" is the service name
 	cli, err := genericclient.NewClient("calculator", g,
 		client.WithHostPorts(calculatorServer0, calculatorServer1),
-		client.WithLoadBalancer(lb))
+		client.WithLoadBalancer(lb),
+		client.WithResolver(r))
 	if err != nil {
 		klog.Fatalf("New HTTP generic client failed: %v", err)
 	}
 
-	// constructing struct for the JSON data (retrived as integers)
+	// Preparing request data to be send over to Kitex
+
+	// Constructing struct for the JSON data (retrived as integers)
 	var variables Variable
 	variables = Variable{
 		FirstInt:  req.FirstInt,
 		SecondInt: req.SecondInt,
 	}
 
-	// Marhsalling the integers into jsonData (variable struct{int64, int64} --> []byte)
+	// Marhsalling the integers into JSON data
+	// (variable struct{int64, int64} --> []byte)
 	jsonData, err := json.Marshal(variables)
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -76,20 +111,23 @@ func Add(ctx context.Context, c *app.RequestContext) {
 	// "Add" is the method name
 	// the string method changes []byte into inteface{} based on ASCII
 	resp, err := cli.GenericCall(context.Background(), "Add", string(jsonData))
-	klog.Info(resp)
-	// Unmarshalling of JSON string into Summer struct (string --> Result struct)
+
+	// Transforming response data to be printed
+
+	// Unmarshalling of JSON string into Answer struct (string --> Answer struct)
 	s := resp.(string)
-	var answer Result
+	var answer Answer
 	err = json.Unmarshal([]byte(s), &answer)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
 	}
 
+	// Printing the answer on terminal
 	ans := utils.H{"The asnwer is": answer.Answer}
 	c.JSON(consts.StatusOK, ans)
 
-	klog.Info("Hertz: Calculation completed")
+	klog.Info("HERTZ: Calculation completed")
 }
 
 type Variable struct {
@@ -97,6 +135,98 @@ type Variable struct {
 	SecondInt int64 `json:"SecondInt"`
 }
 
-type Result struct {
+type Answer struct {
 	Answer int64 `json:"Output"`
+}
+
+// Subtract .
+// @router /subtract [POST]
+func Subtract(ctx context.Context, c *app.RequestContext) {
+	var err error
+
+	// validating the inputs given
+	var req orbital.Variable
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		c.String(consts.StatusBadRequest, err.Error())
+		return
+	}
+
+	klog.Info("HERTZ: Passing to Kitex")
+
+	// Kitex's generic call feature
+
+	// path is the pathway to the IDL file
+	path := "../idl/orbital.thrift"
+
+	// This function call will change the default IDL parsing
+	// from only last service to all services in the IDL file.
+	// By default (i.e. w/o this func call),
+	// the parser will only parse the last service declared in the IDL file.
+	thrift.SetDefaultParseMode(thrift.CombineServices)
+
+	p, err := generic.NewThriftFileProvider(path)
+	if err != nil {
+		klog.Fatalf("New thrift file provider failed: %v", err)
+	}
+
+	g, err := generic.JSONThriftGeneric(p)
+	if err != nil {
+		klog.Fatalf("New map thrift generic failed: %v", err)
+	}
+
+	// Service discovery
+
+	// This HTTP server (in Hertz) will run into an error
+	// if the calculator microservice servers (in Kitex) are not up.
+	r, err := etcd.NewEtcdResolver([]string{"127.0.0.1:2379"})
+	if err != nil {
+		klog.Fatalf("Service registry failed: %v", err)
+	}
+
+	// "calculator" is the service name
+	cli, err := genericclient.NewClient("calculator", g,
+		client.WithHostPorts(calculatorServer0, calculatorServer1),
+		client.WithLoadBalancer(lb),
+		client.WithResolver(r))
+	if err != nil {
+		klog.Fatalf("New HTTP generic client failed: %v", err)
+	}
+
+	// Preparing request data to be send over to Kitex
+
+	// Constructing struct for the JSON data (retrived as integers)
+	var variables Variable
+	variables = Variable{
+		FirstInt:  req.FirstInt,
+		SecondInt: req.SecondInt,
+	}
+
+	// Marhsalling the integers into JSON data
+	// (variable struct{int64, int64} --> []byte)
+	jsonData, err := json.Marshal(variables)
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+
+	// "Subtract" is the method name
+	// the string method changes []byte into inteface{} based on ASCII
+	resp, err := cli.GenericCall(context.Background(), "Subtract", string(jsonData))
+
+	// Transforming response data to be printed
+
+	// Unmarshalling of JSON string into Answer struct (string --> Answer struct)
+	s := resp.(string)
+	var answer Answer
+	err = json.Unmarshal([]byte(s), &answer)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
+	// Printing the answer on terminal
+	ans := utils.H{"The asnwer is": answer.Answer}
+	c.JSON(consts.StatusOK, ans)
+
+	klog.Info("HERTZ: Calculation completed")
 }

@@ -6,12 +6,13 @@ import (
 	"context"
 	client "github.com/cloudwego/kitex/client"
 	callopt "github.com/cloudwego/kitex/client/callopt"
-	orbital "test4/hertz/kitex_gen/orbital"
+	orbital "test1/hertz/kitex_gen/orbital"
 )
 
 // Client is designed to provide IDL-compatible methods with call-option parameter for kitex framework.
 type Client interface {
-	Add(ctx context.Context, inputs *orbital.Variable, callOptions ...callopt.Option) (r *orbital.Result_, err error)
+	Add(ctx context.Context, inputs *orbital.Variable, callOptions ...callopt.Option) (r *orbital.Answer, err error)
+	Subtract(ctx context.Context, inputs *orbital.Variable, callOptions ...callopt.Option) (r *orbital.Answer, err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -43,7 +44,12 @@ type kCalculatorServiceClient struct {
 	*kClient
 }
 
-func (p *kCalculatorServiceClient) Add(ctx context.Context, inputs *orbital.Variable, callOptions ...callopt.Option) (r *orbital.Result_, err error) {
+func (p *kCalculatorServiceClient) Add(ctx context.Context, inputs *orbital.Variable, callOptions ...callopt.Option) (r *orbital.Answer, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.Add(ctx, inputs)
+}
+
+func (p *kCalculatorServiceClient) Subtract(ctx context.Context, inputs *orbital.Variable, callOptions ...callopt.Option) (r *orbital.Answer, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.Subtract(ctx, inputs)
 }

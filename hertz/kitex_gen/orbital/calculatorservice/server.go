@@ -3,7 +3,7 @@ package calculatorservice
 
 import (
 	server "github.com/cloudwego/kitex/server"
-	orbital "test4/hertz/kitex_gen/orbital"
+	orbital "test1/hertz/kitex_gen/orbital"
 )
 
 // NewServer creates a server.Server with the given handler and options.

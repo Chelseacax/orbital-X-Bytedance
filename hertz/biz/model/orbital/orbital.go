@@ -8,7 +8,7 @@ import (
 	"github.com/apache/thrift/lib/go/thrift"
 )
 
-// for calculator's input
+// for calculator's input / request
 type Variable struct {
 	FirstInt  int64 `thrift:"FirstInt,1" form:"FirstInt" json:"FirstInt" query:"FirstInt"`
 	SecondInt int64 `thrift:"SecondInt,2" form:"SecondInt" json:"SecondInt" query:"SecondInt"`
@@ -192,24 +192,24 @@ func (p *Variable) String() string {
 	return fmt.Sprintf("Variable(%+v)", *p)
 }
 
-// for calculator's output
-type Result struct {
+// for calculator's output / response
+type Answer struct {
 	Output int64 `thrift:"Output,1" form:"Output" json:"Output" query:"Output"`
 }
 
-func NewResult() *Result {
-	return &Result{}
+func NewAnswer() *Answer {
+	return &Answer{}
 }
 
-func (p *Result) GetOutput() (v int64) {
+func (p *Answer) GetOutput() (v int64) {
 	return p.Output
 }
 
-var fieldIDToName_Result = map[int16]string{
+var fieldIDToName_Answer = map[int16]string{
 	1: "Output",
 }
 
-func (p *Result) Read(iprot thrift.TProtocol) (err error) {
+func (p *Answer) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -258,7 +258,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_Result[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_Answer[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -268,7 +268,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *Result) ReadField1(iprot thrift.TProtocol) error {
+func (p *Answer) ReadField1(iprot thrift.TProtocol) error {
 	if v, err := iprot.ReadI64(); err != nil {
 		return err
 	} else {
@@ -277,9 +277,9 @@ func (p *Result) ReadField1(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *Result) Write(oprot thrift.TProtocol) (err error) {
+func (p *Answer) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("Result"); err != nil {
+	if err = oprot.WriteStructBegin("Answer"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -306,7 +306,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *Result) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *Answer) writeField1(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("Output", thrift.I64, 1); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -323,11 +323,11 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *Result) String() string {
+func (p *Answer) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("Result(%+v)", *p)
+	return fmt.Sprintf("Answer(%+v)", *p)
 }
 
 // for HelloMethod's input
@@ -608,7 +608,9 @@ func (p *HelloResponse) String() string {
 
 // Methods in "calculator" microservice
 type CalculatorService interface {
-	Add(ctx context.Context, inputs *Variable) (r *Result, err error)
+	Add(ctx context.Context, inputs *Variable) (r *Answer, err error)
+
+	Subtract(ctx context.Context, inputs *Variable) (r *Answer, err error)
 }
 
 type CalculatorServiceClient struct {
@@ -637,11 +639,20 @@ func (p *CalculatorServiceClient) Client_() thrift.TClient {
 	return p.c
 }
 
-func (p *CalculatorServiceClient) Add(ctx context.Context, inputs *Variable) (r *Result, err error) {
+func (p *CalculatorServiceClient) Add(ctx context.Context, inputs *Variable) (r *Answer, err error) {
 	var _args CalculatorServiceAddArgs
 	_args.Inputs = inputs
 	var _result CalculatorServiceAddResult
 	if err = p.Client_().Call(ctx, "Add", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+func (p *CalculatorServiceClient) Subtract(ctx context.Context, inputs *Variable) (r *Answer, err error) {
+	var _args CalculatorServiceSubtractArgs
+	_args.Inputs = inputs
+	var _result CalculatorServiceSubtractResult
+	if err = p.Client_().Call(ctx, "Subtract", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
@@ -709,6 +720,7 @@ func (p *CalculatorServiceProcessor) ProcessorMap() map[string]thrift.TProcessor
 func NewCalculatorServiceProcessor(handler CalculatorService) *CalculatorServiceProcessor {
 	self := &CalculatorServiceProcessor{handler: handler, processorMap: make(map[string]thrift.TProcessorFunction)}
 	self.AddToProcessorMap("Add", &calculatorServiceProcessorAdd{handler: handler})
+	self.AddToProcessorMap("Subtract", &calculatorServiceProcessorSubtract{handler: handler})
 	return self
 }
 func (p *CalculatorServiceProcessor) Process(ctx context.Context, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
@@ -748,7 +760,7 @@ func (p *calculatorServiceProcessorAdd) Process(ctx context.Context, seqId int32
 	iprot.ReadMessageEnd()
 	var err2 error
 	result := CalculatorServiceAddResult{}
-	var retval *Result
+	var retval *Answer
 	if retval, err2 = p.handler.Add(ctx, args.Inputs); err2 != nil {
 		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing Add: "+err2.Error())
 		oprot.WriteMessageBegin("Add", thrift.EXCEPTION, seqId)
@@ -760,6 +772,54 @@ func (p *calculatorServiceProcessorAdd) Process(ctx context.Context, seqId int32
 		result.Success = retval
 	}
 	if err2 = oprot.WriteMessageBegin("Add", thrift.REPLY, seqId); err2 != nil {
+		err = err2
+	}
+	if err2 = result.Write(oprot); err == nil && err2 != nil {
+		err = err2
+	}
+	if err2 = oprot.WriteMessageEnd(); err == nil && err2 != nil {
+		err = err2
+	}
+	if err2 = oprot.Flush(ctx); err == nil && err2 != nil {
+		err = err2
+	}
+	if err != nil {
+		return
+	}
+	return true, err
+}
+
+type calculatorServiceProcessorSubtract struct {
+	handler CalculatorService
+}
+
+func (p *calculatorServiceProcessorSubtract) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := CalculatorServiceSubtractArgs{}
+	if err = args.Read(iprot); err != nil {
+		iprot.ReadMessageEnd()
+		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
+		oprot.WriteMessageBegin("Subtract", thrift.EXCEPTION, seqId)
+		x.Write(oprot)
+		oprot.WriteMessageEnd()
+		oprot.Flush(ctx)
+		return false, err
+	}
+
+	iprot.ReadMessageEnd()
+	var err2 error
+	result := CalculatorServiceSubtractResult{}
+	var retval *Answer
+	if retval, err2 = p.handler.Subtract(ctx, args.Inputs); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing Subtract: "+err2.Error())
+		oprot.WriteMessageBegin("Subtract", thrift.EXCEPTION, seqId)
+		x.Write(oprot)
+		oprot.WriteMessageEnd()
+		oprot.Flush(ctx)
+		return true, err2
+	} else {
+		result.Success = retval
+	}
+	if err2 = oprot.WriteMessageBegin("Subtract", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -923,16 +983,16 @@ func (p *CalculatorServiceAddArgs) String() string {
 }
 
 type CalculatorServiceAddResult struct {
-	Success *Result `thrift:"success,0,optional"`
+	Success *Answer `thrift:"success,0,optional"`
 }
 
 func NewCalculatorServiceAddResult() *CalculatorServiceAddResult {
 	return &CalculatorServiceAddResult{}
 }
 
-var CalculatorServiceAddResult_Success_DEFAULT *Result
+var CalculatorServiceAddResult_Success_DEFAULT *Answer
 
-func (p *CalculatorServiceAddResult) GetSuccess() (v *Result) {
+func (p *CalculatorServiceAddResult) GetSuccess() (v *Answer) {
 	if !p.IsSetSuccess() {
 		return CalculatorServiceAddResult_Success_DEFAULT
 	}
@@ -1007,7 +1067,7 @@ ReadStructEndError:
 }
 
 func (p *CalculatorServiceAddResult) ReadField0(iprot thrift.TProtocol) error {
-	p.Success = NewResult()
+	p.Success = NewAnswer()
 	if err := p.Success.Read(iprot); err != nil {
 		return err
 	}
@@ -1067,6 +1127,298 @@ func (p *CalculatorServiceAddResult) String() string {
 		return "<nil>"
 	}
 	return fmt.Sprintf("CalculatorServiceAddResult(%+v)", *p)
+}
+
+type CalculatorServiceSubtractArgs struct {
+	Inputs *Variable `thrift:"Inputs,1"`
+}
+
+func NewCalculatorServiceSubtractArgs() *CalculatorServiceSubtractArgs {
+	return &CalculatorServiceSubtractArgs{}
+}
+
+var CalculatorServiceSubtractArgs_Inputs_DEFAULT *Variable
+
+func (p *CalculatorServiceSubtractArgs) GetInputs() (v *Variable) {
+	if !p.IsSetInputs() {
+		return CalculatorServiceSubtractArgs_Inputs_DEFAULT
+	}
+	return p.Inputs
+}
+
+var fieldIDToName_CalculatorServiceSubtractArgs = map[int16]string{
+	1: "Inputs",
+}
+
+func (p *CalculatorServiceSubtractArgs) IsSetInputs() bool {
+	return p.Inputs != nil
+}
+
+func (p *CalculatorServiceSubtractArgs) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRUCT {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_CalculatorServiceSubtractArgs[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *CalculatorServiceSubtractArgs) ReadField1(iprot thrift.TProtocol) error {
+	p.Inputs = NewVariable()
+	if err := p.Inputs.Read(iprot); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *CalculatorServiceSubtractArgs) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("Subtract_args"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *CalculatorServiceSubtractArgs) writeField1(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("Inputs", thrift.STRUCT, 1); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := p.Inputs.Write(oprot); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *CalculatorServiceSubtractArgs) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("CalculatorServiceSubtractArgs(%+v)", *p)
+}
+
+type CalculatorServiceSubtractResult struct {
+	Success *Answer `thrift:"success,0,optional"`
+}
+
+func NewCalculatorServiceSubtractResult() *CalculatorServiceSubtractResult {
+	return &CalculatorServiceSubtractResult{}
+}
+
+var CalculatorServiceSubtractResult_Success_DEFAULT *Answer
+
+func (p *CalculatorServiceSubtractResult) GetSuccess() (v *Answer) {
+	if !p.IsSetSuccess() {
+		return CalculatorServiceSubtractResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+var fieldIDToName_CalculatorServiceSubtractResult = map[int16]string{
+	0: "success",
+}
+
+func (p *CalculatorServiceSubtractResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *CalculatorServiceSubtractResult) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 0:
+			if fieldTypeId == thrift.STRUCT {
+				if err = p.ReadField0(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_CalculatorServiceSubtractResult[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *CalculatorServiceSubtractResult) ReadField0(iprot thrift.TProtocol) error {
+	p.Success = NewAnswer()
+	if err := p.Success.Read(iprot); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *CalculatorServiceSubtractResult) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("Subtract_result"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField0(oprot); err != nil {
+			fieldId = 0
+			goto WriteFieldError
+		}
+
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *CalculatorServiceSubtractResult) writeField0(oprot thrift.TProtocol) (err error) {
+	if p.IsSetSuccess() {
+		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := p.Success.Write(oprot); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 0 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
+}
+
+func (p *CalculatorServiceSubtractResult) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("CalculatorServiceSubtractResult(%+v)", *p)
 }
 
 type HelloServiceProcessor struct {

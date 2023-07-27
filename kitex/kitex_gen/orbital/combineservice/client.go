@@ -6,12 +6,13 @@ import (
 	"context"
 	client "github.com/cloudwego/kitex/client"
 	callopt "github.com/cloudwego/kitex/client/callopt"
-	orbital "test4/kitex/kitex_gen/orbital"
+	orbital "test1/kitex/kitex_gen/orbital"
 )
 
 // Client is designed to provide IDL-compatible methods with call-option parameter for kitex framework.
 type Client interface {
-	Add(ctx context.Context, inputs *orbital.Variable, callOptions ...callopt.Option) (r *orbital.Result_, err error)
+	Add(ctx context.Context, inputs *orbital.Variable, callOptions ...callopt.Option) (r *orbital.Answer, err error)
+	Subtract(ctx context.Context, inputs *orbital.Variable, callOptions ...callopt.Option) (r *orbital.Answer, err error)
 	HelloMethod(ctx context.Context, request *orbital.HelloRequest, callOptions ...callopt.Option) (r *orbital.HelloResponse, err error)
 }
 
@@ -44,9 +45,14 @@ type kCombineServiceClient struct {
 	*kClient
 }
 
-func (p *kCombineServiceClient) Add(ctx context.Context, inputs *orbital.Variable, callOptions ...callopt.Option) (r *orbital.Result_, err error) {
+func (p *kCombineServiceClient) Add(ctx context.Context, inputs *orbital.Variable, callOptions ...callopt.Option) (r *orbital.Answer, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.Add(ctx, inputs)
+}
+
+func (p *kCombineServiceClient) Subtract(ctx context.Context, inputs *orbital.Variable, callOptions ...callopt.Option) (r *orbital.Answer, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.Subtract(ctx, inputs)
 }
 
 func (p *kCombineServiceClient) HelloMethod(ctx context.Context, request *orbital.HelloRequest, callOptions ...callopt.Option) (r *orbital.HelloResponse, err error) {

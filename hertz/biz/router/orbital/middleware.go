@@ -16,6 +16,11 @@ func _addMw() []app.HandlerFunc {
 	return nil
 }
 
+func _subtractMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
 func _hellomethodMw() []app.HandlerFunc {
 	// your code...
 	return nil

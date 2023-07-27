@@ -2,24 +2,27 @@ package main
 
 import (
 	"context"
-	orbital "test4/kitex/kitex_gen/orbital"
+	orbital "test1/kitex/kitex_gen/orbital"
 )
 
-// CalculatorServiceImpl implements the last service interface defined in the IDL.
-type CalculatorServiceImpl struct{}
+type CombineServiceImpl struct{}
 
 // Add implements the CalculatorServiceImpl interface.
-func (s *CalculatorServiceImpl) Add(ctx context.Context, inputs *orbital.Variable) (resp *orbital.Result_, err error) {
+func (s *CombineServiceImpl) Add(ctx context.Context, inputs *orbital.Variable) (resp *orbital.Answer, err error) {
 	// TODO: Your code here...
 	summation := inputs.FirstInt + inputs.SecondInt
-	return &orbital.Result_{Output: summation}, nil
+	return &orbital.Answer{Output: summation}, nil
 }
 
-// HelloServiceImpl implements the last service interface defined in the IDL.
-type HelloServiceImpl struct{}
+// Subtract implements the CalculatorServiceImpl interface.
+func (s *CombineServiceImpl) Subtract(ctx context.Context, inputs *orbital.Variable) (resp *orbital.Answer, err error) {
+	// TODO: Your code here...
+	subtraction := inputs.FirstInt - inputs.SecondInt
+	return &orbital.Answer{Output: subtraction}, nil
+}
 
 // HelloMethod implements the HelloServiceImpl interface.
-func (s *HelloServiceImpl) HelloMethod(ctx context.Context, request *orbital.HelloRequest) (resp *orbital.HelloResponse, err error) {
+func (s *CombineServiceImpl) HelloMethod(ctx context.Context, request *orbital.HelloRequest) (resp *orbital.HelloResponse, err error) {
 	// TODO: Your code here...
 	return &orbital.HelloResponse{ResponseBody: "Hello! :) Have a nice day"}, nil
 }

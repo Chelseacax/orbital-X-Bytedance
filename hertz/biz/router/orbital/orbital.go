@@ -4,7 +4,7 @@ package orbital
 
 import (
 	"github.com/cloudwego/hertz/pkg/app/server"
-	orbital "test4/hertz/biz/handler/orbital"
+	orbital "test1/hertz/biz/handler/orbital"
 )
 
 /*
@@ -19,4 +19,5 @@ func Register(r *server.Hertz) {
 	root := r.Group("/", rootMw()...)
 	root.POST("/add", append(_addMw(), orbital.Add)...)
 	root.GET("/hello", append(_hellomethodMw(), orbital.HelloMethod)...)
+	root.POST("/subtract", append(_subtractMw(), orbital.Subtract)...)
 }
