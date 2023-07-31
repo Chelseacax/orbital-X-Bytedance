@@ -107,9 +107,9 @@ Start service with` etcd. `
 
 ## 4.4: Starting the Hertz & Kitex servers
 
-*- Start the server using `go run . `under /hertz directory`.`
+- Start the server using `go run . `under /hertz directory`.`
 
-*- Start the server using `go run . `under /kitex directory`.`
+- Start the server using `go run . `under /kitex directory`.`
 
 
 ## 4.5: Testing Cases for.
@@ -121,8 +121,8 @@ Open another terminal under, use the curl commands below:
 1. For HelloService:
 * `curl 'http://127.0.0.1:42000/hello?name=Chelsea'`
 2. For CalculatorService:
-* Add Method`: curl -X POST -H "Content-Type: application/json" -d '{ "FirstInt": 567, "SecondInt": 123 }' http://127.0.0.1:42000/add`
-* Subtract Method`: curl -X POST -H "Content-Type: application/json" -d '{ "FirstInt": 567, "SecondInt": 123 }' http://127.0.0.1:42000/subtract`
+* Add Method:` curl -X POST -H "Content-Type: application/json" -d '{ "FirstInt": 567, "SecondInt": 123 }' http://127.0.0.1:42000/add`
+* Subtract Method:` curl -X POST -H "Content-Type: application/json" -d '{ "FirstInt": 567, "SecondInt": 123 }' http://127.0.0.1:42000/subtract`
 
 
 
