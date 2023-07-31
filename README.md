@@ -19,14 +19,15 @@ Conversion notes:
 * Source doc: readme
 ----->
 
-The README only includes the basic user guide for the project. For more information, please read the details of our full documentation here: bit.ly/APIGatewayDocumentation 
+The README only includes the basic user guide for the project. For more information, please read the details of our full documentation here: bit.ly/APIGatewayDocumentation
 
-## 1. Basic structure
+
+# 1. Basic structure
 
 The system comprises three primary components: the API Gateway, the backend RPC servers, and a registry centre for service discovery. The API Gateway serves as an intermediary, accepting incoming requests from clients, translating and forwarding them to appropriate backend servers. The backend servers, implemented using Kitex, process these requests and return responses back through the Gateway to the clients. The registry centre Etcd is a framework extension from Kitex.
 
 
-## 2. README Highlight
+# 2. README Highlight
 
 	**Hertz**: hertz server
 
@@ -37,9 +38,7 @@ The system comprises three primary components: the API Gateway, the backend RPC 
 	**Tutorial code**: code used previously for the project
 
 
-## 3. Tech Stack:
-
-
+# 3. Tech Stack:
 
 * Programming Language: Go (Golang)
 * RPC Framework: Kitex
@@ -47,17 +46,12 @@ The system comprises three primary components: the API Gateway, the backend RPC 
 * Data Formats: JSON and Thrift
 
 
-## 4.Usage Examples
 
-This guide provides step-by-step instructions on installing and setting up the API gateway for development or use. Users can follow the outlined prerequisites, installation instructions, and initial configuration if necessary.
-
-
-## 4.1 USAGE INSTRUCTIONS
+# 4 Usage Instructions:
 
 This guide provides step-by-step instructions on installing and setting up the API gateway for development or use. Users can follow the outlined prerequisites, installation instructions, and initial configuration if necessary.
 
 Ensure that the following is properly installed.
-
 
 
 * Go
@@ -66,7 +60,8 @@ Ensure that the following is properly installed.
 * etcd
 
 
-## 4
+## 4.1: Installing of API gateway
+
 
 
 
@@ -89,7 +84,7 @@ Ensure that the following is properly installed.
 
 
 
-## 4**.2: **Configuring** Go **E**nvironment:**
+## 4.2: Configuring Go Environment:
 
 
 
@@ -106,16 +101,15 @@ Ensure that the following is properly installed.
 Start service with` etcd. `
 
 
-
 * etcd must be run first before the other servers
 * The default IP address of etcd is 127.0.0.2379
 
 
-## 4**.**4**: **Starting the Hertz & Kitex servers
+## 4.4: Starting the Hertz & Kitex servers
 
-- Start the server using `go run . `under /hertz directory`.`
+*- Start the server using `go run . `under /hertz directory`.`
 
-- Start the server using `go run . `under /kitex directory`.`
+*- Start the server using `go run . `under /kitex directory`.`
 
 
 ## 4.5: Testing Cases for.
