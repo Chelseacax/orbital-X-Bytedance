@@ -98,7 +98,7 @@ Ensure that the following is properly installed.
 
 ## 4.3: Running etcd service registry
 
-Start service with` etcd. `
+Start service with` etcd `. 
 
 
 * etcd must be run first before the other servers
@@ -107,9 +107,9 @@ Start service with` etcd. `
 
 ## 4.4: Starting the Hertz & Kitex servers
 
-- Start the server using `go run . `under /hertz directory`.`
+- Start the server using `go run . `under /hertz directory.
 
-- Start the server using `go run . `under /kitex directory`.`
+- Start the server using `go run . `under /kitex directory.
 
 
 ## 4.5: Testing Cases for.
