@@ -19,7 +19,7 @@ Conversion notes:
 * Source doc: readme
 ----->
 
-## check out the details of our full documentation here:https://docs.google.com/document/d/1_plI0Uo0BMp_dmGk1guOZPVVn63LVT6k3Y7NAu9aBss/edit#heading=h.s0ri7fwxlsfu
+## The README only includes the basic user guide for the project. For more information, please read the details of our full documentation here: bit.ly/APIGatewayDocumentation
 
 ## 1. Basic structure
 
@@ -34,7 +34,7 @@ The system comprises three primary components: the API Gateway, the backend RPC 
 
 	**Kitex**: kitex server
 
-	**Tutorial** **code**: code used previously for the project
+	**Tutorial code**: code used previously for the project
 
 
 ## 3. Tech Stack:
@@ -52,14 +52,32 @@ The system comprises three primary components: the API Gateway, the backend RPC 
 This guide provides step-by-step instructions on installing and setting up the API gateway for development or use. Users can follow the outlined prerequisites, installation instructions, and initial configuration if necessary.
 
 
-### 4.1 Installation
+# 4**.** USAGE INSTRUCTIONS
+
+This guide provides step-by-step instructions on installing and setting up the API gateway for development or use. Users can follow the outlined prerequisites, installation instructions, and initial configuration if necessary.
+
+Ensure that the following is properly installed.
+
+
+
+* Go
+* Kitex
+* Hertz
+* etcd
+
+
+## 4**.1**: **Install**ing** of API gat**eway
+
+
 
 1. Clone this repository:
 
 
 ```
    git clone https://github.com/Chelseacax/orbital-X-Bytedance
+
 ```
+
 
 
 2. Navigate to the project directory:
@@ -70,54 +88,49 @@ This guide provides step-by-step instructions on installing and setting up the A
 ```
 
 
-3. Run the application:
 
-
-```
-   go run .
-```
+## 4**.2: **Configuring** Go **E**nvironment:**
 
 
 
-### 4.2 Go environment configuration:
-
-   - Update your `~/.zshrc` file with the following configuration:
-
-
-```
-     export GOROOT=/usr/local/src/go
-     export GOPATH=$HOME/go
-     export PATH=$PATH:$GOROOT/bin
-     export PATH=$GOPATH/bin:$PATH
-```
+* Update your `~/.zshrc` file with the following configuration:
+    * `export GOROOT=/usr/local/src/go`
+    * `export GOPATH=$HOME/go`
+    * `export PATH=$PATH:$GOROOT/bin`
+    * `export PATH=$GOPATH/bin:$PATH`
+* Run `source ~/.zshrc` to apply the changes to your terminal.
 
 
-   - Run `source ~/.zshrc` to apply the changes to your terminal.
+## 4.3: Running etcd service registry
 
-   - Use `go env` to verify the settings and ensure proper configuration.
-
-
-### 4.3 Commands according to endpoints:
-
-To handle different operations in your API gateway, you can use specific endpoints for each operation. Currently we have implemented two services: addService and helloService and you can use them as the end points.
+Start service with` etcd. `
 
 
-### 4.4 Make rpc call
 
-To set up the Hz server:
+* etcd must be run first before the other servers
+* The default IP address of etcd is 127.0.0.2379
 
-- Generate Hz code scaffolding using the `hz new` command with the appropriate IDL file.
 
-- Generate Kitex client code scaffolding using the `kitex` command and the relevant IDL file.
+## 4**.**4**: **Starting the Hertz & Kitex servers
 
-- Start the server using ``go run .`.`
+- Start the server using `go run . `under /hertz directory`.`
 
-To use Kitex server:
+- Start the server using `go run . `under /kitex directory`.`
 
-- Generate Kitex server code scaffolding with the ``kitex`` command and the corresponding IDL file.
 
-- Complete the business logic in the `handler.go` file.
+## 4.5: Testing Cases for.
 
-- Start the server using ``go run .`.`
+Open another terminal under, use the curl commands below:
+
+
+
+1. For HelloService:
+* `curl 'http://127.0.0.1:42000/hello?name=Chelsea'`
+2. For CalculatorService:
+* Add Method`: curl -X POST -H "Content-Type: application/json" -d '{ "FirstInt": 567, "SecondInt": 123 }' http://127.0.0.1:42000/add`
+* Subtract Method`: curl -X POST -H "Content-Type: application/json" -d '{ "FirstInt": 567, "SecondInt": 123 }' http://127.0.0.1:42000/subtract`
+
+
+
 
 
