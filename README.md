@@ -19,7 +19,7 @@ Conversion notes:
 * Source doc: readme
 ----->
 
-## The README only includes the basic user guide for the project. For more information, please read the details of our full documentation here: bit.ly/APIGatewayDocumentation
+The README only includes the basic user guide for the project. For more information, please read the details of our full documentation here: bit.ly/APIGatewayDocumentation 
 
 ## 1. Basic structure
 
@@ -52,7 +52,7 @@ The system comprises three primary components: the API Gateway, the backend RPC 
 This guide provides step-by-step instructions on installing and setting up the API gateway for development or use. Users can follow the outlined prerequisites, installation instructions, and initial configuration if necessary.
 
 
-# 4**.** USAGE INSTRUCTIONS
+## 4.1 USAGE INSTRUCTIONS
 
 This guide provides step-by-step instructions on installing and setting up the API gateway for development or use. Users can follow the outlined prerequisites, installation instructions, and initial configuration if necessary.
 
@@ -66,7 +66,7 @@ Ensure that the following is properly installed.
 * etcd
 
 
-## 4**.1**: **Install**ing** of API gat**eway
+## 4
 
 
 
