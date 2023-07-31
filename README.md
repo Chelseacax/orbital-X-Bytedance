@@ -19,7 +19,7 @@ Conversion notes:
 * Source doc: readme
 ----->
 
-The README only includes the basic user guide for the project. For more information, please read the details of our full documentation here: bit.ly/APIGatewayDocumentation
+The README only includes the basic user guide for the project. For more information, please read the details of our full documentation (bit.ly/APIGatewayDocumentation, "here").
 
 
 # 1. Basic structure
